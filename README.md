@@ -1,22 +1,47 @@
 # screw-problem
 
-처음 접하는 문제나 모호한 요청을 바로 만들지 않고, 조사 → 요구사항 → 계획 → 다른 에이전트용 인계 문서까지 만드는 에이전트 스킬 `problem-discovery`.
+모호한 문제를 바로 만들지 않고, 현업 요건 도출 → 빈 곳 보완 → 계획과 인계 문서까지 이어 주는 에이전트 스킬 묶음.
 
 Codex 스킬 형식(`SKILL.md` + `agents/openai.yaml`)이며, Claude Code에서도 같은 폴더를 그대로 쓸 수 있다.
+
+| 스킬 | 하는 일 | 부르는 법 |
+|---|---|---|
+| `drill` | 현업 인터뷰로 실제 업무 흐름, 판단 기준, 예외를 끌어내 `요건정리.md`로. 대화형, 질문지, 회의록 정리 세 모드 | `$drill` |
+| `gap-assist` | 요건이나 기획안의 빈 곳을 찾아 왜 문제인지, 보통 어떻게 정하는지, 추천과 결정권자까지 알려 줌 | `$gap-assist` |
+| `problem-discovery` | 조사, 사실/모름/추정 구분, 요구사항, 계획, 인계 문서 4종(REQUIREMENTS, PLAN, AGENTS, HANDOFF.md) | `$problem-discovery` |
+
+이어 쓰는 순서: `drill`(현업에게 묻기) → `gap-assist`(빈 곳 메우기) → `problem-discovery`(계획과 인계). 각각 따로 써도 된다.
+
+`guides/AGENTS.md`는 에이전트가 파일과 작업 폴더를 어지르지 않게 하는 지침이다. 프로젝트 루트에 복사하거나 `~/.codex/AGENTS.md`에 덧붙여 쓴다.
 
 ## 설치
 
 ```bash
 git clone https://github.com/HUNIooth/screw-problem.git
-cp -R screw-problem/problem-discovery ~/.codex/skills/
+cp -R screw-problem/{drill,gap-assist,problem-discovery} ~/.codex/skills/
 
 # Claude Code에서도 쓰려면
-ln -s ~/.codex/skills/problem-discovery ~/.claude/skills/problem-discovery
+for s in drill gap-assist problem-discovery; do ln -s ~/.codex/skills/$s ~/.claude/skills/$s; done
+
+# 파일 정리 지침을 모든 Codex 세션에 적용하려면
+cat screw-problem/guides/AGENTS.md >> ~/.codex/AGENTS.md
 ```
 
-Codex에서는 `$problem-discovery`로 부르거나, "처음 보는 문제", "요구사항 정리", "인계 문서" 같은 말을 하면 자동으로 켜진다.
+## drill 설계
 
-## 구성
+- 현업은 해결책("~만들어 주세요")으로 요청하고, 몸에 밴 판단 기준과 예외는 말하지 않는다. 가정 질문("있으면 쓰실래요?")에는 대부분 "네"라고 한다. 그래서 의견 대신 **최근 실제 한 건**을 따라가며 묻는다.
+- 다섯 갈래로 판다: 목적 되돌리기, 최근 한 건 따라가기, 판단 기준 꺼내기, 예외 캐기, 숫자와 정답. 갈래별 질문 문장은 `drill/references/interview-moves.md`.
+- 현업 원문과 정리된 요건을 나란히 두고, 현업이 확인한 요건만 확정으로 친다.
+- 질문지 모드는 글로 받기 쉬운 것(숫자, 양식, 샘플)은 사전 질의서로, 판단과 예외는 현장 질문으로 나눈다.
+
+## gap-assist 설계
+
+- "예외 처리가 없습니다" 같은 지적은 상대가 그 주제를 모르면 쓸모가 없다. 빈 곳마다 이대로 가면 생기는 장면, 보통 고르는 선택지, 추천 하나, 누가 정할지를 붙인다.
+- 빈 곳을 없음, 모호함, 충돌로 나누고 치명/중요만 최대 7개 본문에 둔다.
+- 점검 영역 13개(목적과 효과, 범위, 입력 데이터, 판단 기준과 정답, 예외, 사람 확인 지점, 보안, 규정, 운영, 변경 관리, 규모, 전달, AI 사용)는 `gap-assist/references/blind-spots.md`.
+- 끝에 현업에게 보낼 질문 목록을 붙여 `drill` 다음 회차에 바로 쓴다.
+
+## problem-discovery 구성
 
 | 파일 | 역할 | 읽는 시점 |
 |---|---|---|
@@ -27,7 +52,7 @@ Codex에서는 `$problem-discovery`로 부르거나, "처음 보는 문제", "�
 
 절차만 항상 읽고 나머지는 필요할 때만 읽어 토큰을 아낀다.
 
-## 설계
+## problem-discovery 설계
 
 **기준**: 이 대화를 읽지 않은 에이전트가 인계 문서만 보고 일을 시작하고, 끝났는지 스스로 판정할 수 있는가. 모든 규칙이 이 기준에서 나온다.
 
@@ -56,7 +81,7 @@ Codex에서는 `$problem-discovery`로 부르거나, "처음 보는 문제", "�
 
 작은 일(반나절 안쪽, 산출물 하나)은 경량 모드로 `HANDOFF.md` 한 장만 쓴다.
 
-## 처음 쓰면 이렇게 흘러간다
+## problem-discovery 처음 쓰면 이렇게 흘러간다
 
 예시 장면이다.
 

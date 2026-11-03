@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gap Assist"
+  short_description: "빠진 부분을 찾아 선택지와 추천까지 알려 주기"
+  default_prompt: "Use $gap-assist to find what is missing in this requirements doc or plan, and explain why it matters, typical options, and a recommended default."

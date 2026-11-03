@@ -1,0 +1,4 @@
+interface:
+  display_name: "Drill"
+  short_description: "현업 인터뷰로 실제 요건 끌어내기"
+  default_prompt: "Use $drill to interview the business owner (or draft an interview sheet, or turn meeting notes into requirements) and write 요건정리.md."
