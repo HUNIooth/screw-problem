@@ -4,6 +4,7 @@
 
 | 스킬 | 언제 쓰나 |
 |---|---|
+| `screw-setup` | 처음 한 번. 역할, 모델, 멀티에이전트, 공통 제약 설정 |
 | `drill-pilot` | 문제를 내가 먼저 제대로 이해하고 싶을 때 |
 | `drill` | 현업 담당자에게 실제 업무와 요건을 물어야 할 때 |
 | `gap-assist` | 기획안이나 요건 정리에 빠진 게 없는지 볼 때 |
@@ -38,18 +39,28 @@
 
 ```bash
 git clone https://github.com/HUNIooth/screw-problem.git
-cp -R screw-problem/{drill-pilot,drill,gap-assist,problem-discovery,crew} ~/.codex/skills/
+cp -R screw-problem/{screw-setup,drill-pilot,drill,gap-assist,problem-discovery,crew} ~/.codex/skills/
 ```
 
 Claude Code에서도 쓰려면 바로가기를 하나씩 만듭니다.
 
 ```bash
-for s in drill-pilot drill gap-assist problem-discovery crew; do
+for s in screw-setup drill-pilot drill gap-assist problem-discovery crew; do
   ln -s ~/.codex/skills/$s ~/.claude/skills/$s
 done
 ```
 
-설치 후 Codex를 다시 열면 `$스킬이름`으로 부를 수 있습니다. 이름을 안 불러도 "요구사항 정리해 줘", "현업 인터뷰 질문지" 같은 말에 알아서 켜집니다.
+설치 후 Codex를 다시 열고, 처음 한 번은 설정부터 합니다.
+
+```
+$screw-setup
+```
+
+환경(python3, git, 현재 모델, 멀티에이전트 기능)을 점검한 뒤 다섯 가지를 한 번에 묻습니다. 이 스킬들을 써 본 적 있는지, 평소 내 문제를 푸는지 현업 요건을 구현하는지, 계획과 구현에 쓸 모델, 멀티에이전트 허용 여부, 모든 작업에 지킬 제약. 답은 `~/.screw-problem/설정.md`에 남고, 다른 스킬은 이 값을 기본값으로 씁니다. "전부 추천대로"라고 해도 됩니다.
+
+새 과제를 시작할 때마다 이번 문제가 누구의 것인지(내 문제인지 현업 요건인지)와 이번에만 더해지는 제약을 먼저 확인합니다. 설정과 같으면 "그대로"로 넘어갑니다.
+
+그다음부터 `$스킬이름`으로 부를 수 있습니다. 이름을 안 불러도 "요구사항 정리해 줘", "현업 인터뷰 질문지" 같은 말에 알아서 켜집니다.
 
 ## 쓰는 법
 
@@ -116,7 +127,7 @@ $problem-discovery 팀 주간 업무보고를 자동으로 만들고 싶어
 
 ## 보통 쓰는 순서
 
-`drill-pilot`으로 문제를 이해하고, 필요하면 `drill`로 현업에게 묻고 `gap-assist`로 빈 곳을 메운 뒤, `problem-discovery`로 계획과 인계 문서를 만듭니다. 세션을 나눠 돌릴 만큼 크면 `crew`로 넘어갑니다. 모두 따로 써도 됩니다. 순서와 넘겨주는 방법은 [guides/사용자_주도_작업흐름.md](guides/사용자_주도_작업흐름.md)에 더 자세히 있습니다.
+처음 한 번 `screw-setup`으로 설정하고, 과제마다 `drill-pilot`으로 문제를 이해하고, 필요하면 `drill`로 현업에게 묻고 `gap-assist`로 빈 곳을 메운 뒤, `problem-discovery`로 계획과 인계 문서를 만듭니다. 세션을 나눠 돌릴 만큼 크면 `crew`로 넘어갑니다. 모두 따로 써도 됩니다. 순서와 넘겨주는 방법은 [guides/사용자_주도_작업흐름.md](guides/사용자_주도_작업흐름.md)에 더 자세히 있습니다.
 
 ## 파일 정리 지침
 
@@ -129,6 +140,7 @@ cat screw-problem/guides/AGENTS.md >> ~/.codex/AGENTS.md
 ## 폴더 구조
 
 ```
+screw-setup/        처음 설정 (역할, 모델, 멀티에이전트, 제약)
 drill-pilot/        문제 이해 대화
 drill/              현업 인터뷰 (질문 기법, 질문지와 요건정리 양식)
 gap-assist/         빠진 곳 점검 (점검 영역 13개)

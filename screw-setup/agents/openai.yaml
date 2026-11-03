@@ -1,0 +1,4 @@
+interface:
+  display_name: "Screw Setup"
+  short_description: "처음 한 번: 역할, 모델, 멀티에이전트, 제약 설정"
+  default_prompt: "Use $screw-setup to check my environment and set my experience level, usual role, model and reasoning effort, multi-agent permission, and common constraints in ~/.screw-problem/설정.md."
