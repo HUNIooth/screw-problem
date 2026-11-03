@@ -1,17 +1,20 @@
 # screw-problem
 
-모호한 문제를 바로 만들지 않고, 현업 요건 도출 → 빈 곳 보완 → 계획과 인계 문서까지 이어 주는 에이전트 스킬 묶음.
+사용자가 문제를 이해하고 AI 작업을 지휘하도록 돕는 스킬 묶음. 역할과 이해 확인 → 필요한 현업 질문 → 계획과 인계 → 사용자 피드백 반영으로 이어진다.
+
+전체 흐름과 6대 병목 대응은 [사용자 주도 작업 흐름](guides/사용자_주도_작업흐름.md)을 먼저 읽는다.
 
 Codex 스킬 형식(`SKILL.md` + `agents/openai.yaml`)이며, Claude Code에서도 같은 폴더를 그대로 쓸 수 있다.
 
 | 스킬 | 하는 일 | 부르는 법 |
 |---|---|---|
+| `drill-pilot` | 사용자의 역할과 결정권을 확인하고 최소 10턴의 정리/질문으로 문제 이해를 돕는다. 충분하면 근거를 들어 계획 전환을 제안 | `$drill-pilot` |
 | `drill` | 현업 인터뷰로 실제 업무 흐름, 판단 기준, 예외를 끌어내 `요건정리.md`로. 대화형, 질문지, 회의록 정리 세 모드 | `$drill` |
 | `gap-assist` | 요건이나 기획안의 빈 곳을 찾아 왜 문제인지, 보통 어떻게 정하는지, 추천과 결정권자까지 알려 줌 | `$gap-assist` |
-| `problem-discovery` | 조사, 사실/모름/추정 구분, 요구사항, 계획, 인계 문서 4종(REQUIREMENTS, PLAN, AGENTS, HANDOFF.md) | `$problem-discovery` |
+| `problem-discovery` | 조사, 요구사항, 계획, 인계 문서 4종과 사람이 보는 사용자_검토.md | `$problem-discovery` |
 | `crew` | Codex 세션 여러 개를 킥오프, 작업, 노티, 기록 역할로 나눠 공유 폴더 `_crew/`로 함께 돌림 | 세션마다 `$crew` |
 
-이어 쓰는 순서: `drill`(현업에게 묻기) → `gap-assist`(빈 곳 메우기) → `problem-discovery`(계획과 인계). 각각 따로 써도 된다.
+사용자의 이해를 먼저 다루려면 `drill-pilot`으로 시작한다. 현업 확인은 `drill`, 선택과 보완 안내는 `gap-assist`를 필요할 때 사용하고, `problem-discovery`로 계획과 인계를 작성한다. 사용자가 직접 계획이나 구현을 요청했다면 불필요한 인터뷰를 강제하지 않는다. 각각 따로 쓸 수 있다.
 
 `guides/AGENTS.md`는 에이전트가 파일과 작업 폴더를 어지르지 않게 하는 지침이다. 프로젝트 루트에 복사하거나 `~/.codex/AGENTS.md`에 덧붙여 쓴다.
 
@@ -19,10 +22,10 @@ Codex 스킬 형식(`SKILL.md` + `agents/openai.yaml`)이며, Claude Code에서�
 
 ```bash
 git clone https://github.com/HUNIooth/screw-problem.git
-cp -R screw-problem/{drill,gap-assist,problem-discovery,crew} ~/.codex/skills/
+cp -R screw-problem/{drill-pilot,drill,gap-assist,problem-discovery,crew} ~/.codex/skills/
 
 # Claude Code에서도 쓰려면
-for s in drill gap-assist problem-discovery crew; do ln -s ~/.codex/skills/$s ~/.claude/skills/$s; done
+for s in drill-pilot drill gap-assist problem-discovery crew; do ln -s ~/.codex/skills/$s ~/.claude/skills/$s; done
 
 # 파일 정리 지침을 모든 Codex 세션에 적용하려면
 cat screw-problem/guides/AGENTS.md >> ~/.codex/AGENTS.md
@@ -57,28 +60,29 @@ cat screw-problem/guides/AGENTS.md >> ~/.codex/AGENTS.md
 |---|---|---|
 | `problem-discovery/SKILL.md` | 0~8단계 절차 | 스킬이 켜질 때 |
 | `problem-discovery/references/question-bank.md` | 유형 7종(업무 자동화, 문서, 앱, 데이터 검수, 조사, 영상, 의사결정)별 추가 질문 | 해당 유형만 골라서 |
-| `problem-discovery/references/templates.md` | 인계 문서 4종 양식 + 경량 양식 | 문서를 쓸 때 |
+| `problem-discovery/references/templates.md` | 인계 문서 4종 양식, 피드백 갱신 규칙, 경량 양식 | 문서를 쓸 때 |
+| `problem-discovery/references/user-review.md` | 사용자 검토 양식, 6대 병목 점검, 피드백 처리 | 사용자 안내를 작성하거나 갱신할 때 |
 | `problem-discovery/agents/openai.yaml` | Codex 표시 이름과 기본 프롬프트 | 스킬 목록 표시 |
 
 절차만 항상 읽고 나머지는 필요할 때만 읽어 토큰을 아낀다.
 
 ## problem-discovery 설계
 
-**기준**: 이 대화를 읽지 않은 에이전트가 인계 문서만 보고 일을 시작하고, 끝났는지 스스로 판정할 수 있는가. 모든 규칙이 이 기준에서 나온다.
+**기준**: 사용자가 현재 상태와 선택, 다음 지시와 결과 확인 방법을 이해하는가. 다른 에이전트가 문서로 작업을 이어갈 수 있는가.
 
-**실행하지 않는다**: 인계 문서와 준비 판정에서 멈춘다. 모호한 문제에서 가장 비싼 실수는 잘못된 것을 만드는 일이라서, 사용자가 "진행해"라고 하기 전에는 만들지 않는다.
+**현재 요청 범위를 따른다**: 문서 작성 요청이면 계획과 인계에서 마친다. 실행까지 이미 요청했다면 같은 허락을 다시 묻지 않고 생성된 AGENTS.md와 HANDOFF.md를 따라 진행하되, 준비 판정이 🟢이거나 🟡의 추정을 사용자가 승인했을 때만 진행한다.
 
 | 능력 | 스킬 안에서 하는 일 |
 |---|---|
 | 아는 것과 모르는 것 구분 | 1단계 **지식 장부**: 사실/모름/추정을 나누고 근거를 적는다. 근거가 없으면 사실이 아니다. |
 | 중요한 것부터 질문 | 2단계 **빈틈 순위**: 영향(높음/중간/낮음) × 푸는 방법(조사로 풀림/사용자만 앎/해 봐야 앎). 사용자만 알고 영향이 높은 것만 묻고, 해 봐야 아는 것은 계획의 첫 시험 단계로 보낸다. |
 | 요구사항 정리 | 4단계: 요구사항마다 통과를 확인할 방법을 붙이고 범위 밖을 따로 적는다. |
-| 실행해도 되는지 판단 | 6단계: 다섯 가지 점검으로 🟢 실행 가능 / 🟡 조건부 / 🔴 추가 탐색 필요. |
-| 다음 에이전트에게 인계 | 7단계: 네 파일을 쓰고, 대화를 못 본 에이전트도 읽을 수 있는지 점검한다. |
+| 실행해도 되는지 판단 | 6단계: 업무 기준, 검증과 사용자 판단 안내를 점검해 🟢 실행 가능 / 🟡 조건부 / 🔴 추가 탐색 필요로 구분. |
+| 다음 에이전트에게 인계 | 7단계: 인계 문서 4종과 사용자_검토.md를 쓰고, 사용자 판단과 후속 작업에 충분한지 점검한다. |
 
-**질문 수 제한**: 묻기 전에 먼저 찾는다. 한 번에 최대 5개, 세 번까지. 질문마다 틀리면 무엇이 뒤집히는지와 추천 답을 붙여 "알아서 해" 한마디로도 넘어갈 수 있게 한다. 질문을 보냈으면 답을 기다리고, 비대화 실행(`codex exec`)이면 추천 답을 추정으로 적고 판정을 🟡 이하로 둔다.
+**질문 수 제한**: 묻기 전에 먼저 찾는다. 핵심 질문은 한 번에 최대 3개. 세 라운드 이후에는 미확정 사항을 확인/시험 작업으로 분리하고 계획 전환을 제안한다. drill-pilot의 최소 10턴과는 별개다. 질문마다 틀리면 무엇이 뒤집히는지와 추천 답을 붙여 "알아서 해" 한마디로도 넘어갈 수 있게 한다. 질문을 보냈으면 답을 기다리고, 비대화 실행(`codex exec`)이면 추천 답을 추정으로 적고 판정을 🟡 이하로 둔다.
 
-**네 파일은 성격으로 나눈다**
+**인계 문서와 사용자 안내의 역할**
 
 | 파일 | 담는 것 | 성격 |
 |---|---|---|
@@ -86,10 +90,11 @@ cat screw-problem/guides/AGENTS.md >> ~/.codex/AGENTS.md
 | PLAN.md | 순서와 각 단계의 검증 | 방법 |
 | AGENTS.md | 수행 에이전트의 역할, 권한, 금지, 입출력 | 잘 안 바뀜 |
 | HANDOFF.md | 지금 상태, 다음 행동, 남은 추정 | 계속 바뀜 |
+| 사용자_검토.md | 역할, 이해 상태, 중요한 선택, 다음 지시, 확인 방법, 피드백 | 사람이 보는 안내 |
 
-수행 에이전트는 단계가 끝날 때마다 HANDOFF.md만 고치면 된다. 인계 문서는 작업 폴더 아래 `discovery/<YYYYMMDD>_<주제>/`에 둔다. 작업 폴더 루트의 `AGENTS.md`는 이후 모든 Codex 세션이 자동으로 읽으므로 인계용은 반드시 하위 폴더에 둔다.
+수행 에이전트는 피드백으로 영향받는 문서를 갱신하고 HANDOFF.md에 상태, 사용자_검토.md에 변경 이유와 검증 증거를 남긴다. 사용자 지정 폴더가 우선이며, 없으면 `discovery/<YYYYMMDD>_<주제>/`를 쓴다. 작업 폴더 루트의 기존 AGENTS.md는 덮어쓰지 않는다.
 
-작은 일(반나절 안쪽, 산출물 하나)은 경량 모드로 `HANDOFF.md` 한 장만 쓴다.
+작은 일(반나절 안쪽, 산출물 하나)은 HANDOFF.md 한 장에 사용자 판단과 피드백 안내를 합친다. 이미 있는 사용자 피드백 문서는 보존한다.
 
 ## problem-discovery 처음 쓰면 이렇게 흘러간다
 
@@ -112,7 +117,7 @@ cat screw-problem/guides/AGENTS.md >> ~/.codex/AGENTS.md
    ```
 
 **두 번째 답변 (사용자가 답한 뒤)**
-- 장부를 갱신하고, 새로 생긴 질문이 없으면 `discovery/20261103_주간보고자동화/`에 네 파일을 쓴다.
+- 장부를 갱신하고, 새로 생긴 질문이 없으면 `discovery/20261103_주간보고자동화/`에 인계 문서 4종과 사용자_검토.md를 쓴다.
 - `PLAN.md` 0단계는 위험한 추정을 확인하는 시험 작업이고, 실패하면 계획을 다시 짜는 분기점이 적혀 있다.
 - 마지막 보고:
   ```

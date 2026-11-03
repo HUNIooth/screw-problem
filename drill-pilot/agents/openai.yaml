@@ -1,0 +1,4 @@
+interface:
+  display_name: "Drill Pilot"
+  short_description: "사용자의 역할과 문제 이해를 확인하고 판단을 돕는 대화"
+  default_prompt: "Use $drill-pilot to ask my role, help me understand this problem through at least 10 substantive exchanges, and recommend a transition to planning when the evidence shows further questioning would add unnecessary detail."
