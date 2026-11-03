@@ -1,0 +1,4 @@
+interface:
+  display_name: "Problem Discovery"
+  short_description: "모호한 문제를 요구사항과 인계 문서로"
+  default_prompt: "Use $problem-discovery to investigate this problem, ask what only I know, and write REQUIREMENTS/PLAN/AGENTS/HANDOFF.md before anything is built."
