@@ -9,6 +9,7 @@ Codex 스킬 형식(`SKILL.md` + `agents/openai.yaml`)이며, Claude Code에서�
 | `drill` | 현업 인터뷰로 실제 업무 흐름, 판단 기준, 예외를 끌어내 `요건정리.md`로. 대화형, 질문지, 회의록 정리 세 모드 | `$drill` |
 | `gap-assist` | 요건이나 기획안의 빈 곳을 찾아 왜 문제인지, 보통 어떻게 정하는지, 추천과 결정권자까지 알려 줌 | `$gap-assist` |
 | `problem-discovery` | 조사, 사실/모름/추정 구분, 요구사항, 계획, 인계 문서 4종(REQUIREMENTS, PLAN, AGENTS, HANDOFF.md) | `$problem-discovery` |
+| `crew` | Codex 세션 여러 개를 킥오프, 작업, 노티, 기록 역할로 나눠 공유 폴더 `_crew/`로 함께 돌림 | 세션마다 `$crew` |
 
 이어 쓰는 순서: `drill`(현업에게 묻기) → `gap-assist`(빈 곳 메우기) → `problem-discovery`(계획과 인계). 각각 따로 써도 된다.
 
@@ -18,10 +19,10 @@ Codex 스킬 형식(`SKILL.md` + `agents/openai.yaml`)이며, Claude Code에서�
 
 ```bash
 git clone https://github.com/HUNIooth/screw-problem.git
-cp -R screw-problem/{drill,gap-assist,problem-discovery} ~/.codex/skills/
+cp -R screw-problem/{drill,gap-assist,problem-discovery,crew} ~/.codex/skills/
 
 # Claude Code에서도 쓰려면
-for s in drill gap-assist problem-discovery; do ln -s ~/.codex/skills/$s ~/.claude/skills/$s; done
+for s in drill gap-assist problem-discovery crew; do ln -s ~/.codex/skills/$s ~/.claude/skills/$s; done
 
 # 파일 정리 지침을 모든 Codex 세션에 적용하려면
 cat screw-problem/guides/AGENTS.md >> ~/.codex/AGENTS.md
@@ -40,6 +41,15 @@ cat screw-problem/guides/AGENTS.md >> ~/.codex/AGENTS.md
 - 빈 곳을 없음, 모호함, 충돌로 나누고 치명/중요만 최대 7개 본문에 둔다.
 - 점검 영역 13개(목적과 효과, 범위, 입력 데이터, 판단 기준과 정답, 예외, 사람 확인 지점, 보안, 규정, 운영, 변경 관리, 규모, 전달, AI 사용)는 `gap-assist/references/blind-spots.md`.
 - 끝에 현업에게 보낼 질문 목록을 붙여 `drill` 다음 회차에 바로 쓴다.
+
+## crew 설계
+
+- 세션을 켜면 `$crew`로 시작하고, 무엇보다 먼저 이 세션의 역할을 정한다. 역할은 `AGENTS.md`에 쓰지 않는다. `AGENTS.md`는 그 폴더의 모든 세션이 읽으므로 역할을 적으면 모든 세션이 같은 역할을 받는다.
+- **킥오프**: 과제 README의 필수 요구사항을 원문 그대로 뽑고, 문제 수준(S/M/L/XL)을 보고 편성을 제안한 뒤 사용자와 대화로 확정한다. `REQUIREMENTS.md`(README 추적표), `PLAN.md`, `EXECUTION.md`(세션별 범위, 소유 파일, 병렬과 합류, 붙여 넣을 시작 지시문)를 쓰고, 끝나면 노티로 전환한다.
+- **작업**: 긴 작업 하나. 노티의 수정 요청은 사용자 지시(D-번호)에 근거한 것만 검토해 반영한다. 정말 아니면 반영하지 않되, 이유와 대안, 따를 조건을 써서 사용자를 설득한다. 사용자가 유지하면 따른다.
+- **노티**: 작업을 지켜보고 지시와 어긋나면 D-번호를 달아 수정 요청한다. 자기 판단의 개선안은 작업에 보내지 않고 사용자에게 제안한다. 작업 파일은 직접 고치지 않는다.
+- **기록**: `working_raw_log`에 지시, 요청, 응답을 합쳐 "무엇을 했고 무엇이 왜 바뀌었나"를 `history.md`로 정리한다.
+- 세션끼리는 `_crew/` 파일로만 소통하고, 파일마다 쓰는 쪽은 하나다. 기다릴 때는 `scripts/wait_change.py`로 파일이 바뀔 때까지 잠들고, 새로 붙은 줄만 읽는다.
 
 ## problem-discovery 구성
 

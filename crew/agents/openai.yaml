@@ -1,0 +1,4 @@
+interface:
+  display_name: "Crew"
+  short_description: "세션별 역할 정하고 킥오프, 작업, 노티, 기록으로 함께 돌리기"
+  default_prompt: "Use $crew to set this session's role first (kickoff, worker, noti, or history), then follow that role using the shared _crew/ folder."
