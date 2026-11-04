@@ -4,7 +4,7 @@
 --state를 주면 마지막으로 본 내용을 기억해, 기다리지 않은 사이에 바뀐 것도 바로 알려 준다.
 
 사용:
-  wait_change.py [--state S.json] [--timeout 600] [--interval 3] [--max-lines 200] FILE [FILE ...]
+  wait_change.py [--state S.json] [--timeout 600] [--interval 3] FILE [FILE ...]
 
 끝 코드: 0 바뀜, 2 시간 초과
 """
@@ -51,7 +51,7 @@ def save_state(path, state):
         json.dump(state, f, ensure_ascii=False, indent=1)
 
 
-def report(path, old, max_lines):
+def report(path, old):
     lines = read_lines(path)
     print(f"== {path}")
     if lines is None:
@@ -63,11 +63,7 @@ def report(path, old, max_lines):
     else:
         new = lines
         label = f"새로 쓰임, 전체 {len(new)}줄"
-    if len(new) > max_lines:
-        print(f"({label}, 앞 {len(new) - max_lines}줄 생략)")
-        new = new[-max_lines:]
-    else:
-        print(f"({label})")
+    print(f"({label})")
     print("\n".join(new))
     return {"lines": len(lines), "sha": digest(lines)}
 
@@ -78,7 +74,6 @@ def main():
     ap.add_argument("--state")
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--interval", type=float, default=3)
-    ap.add_argument("--max-lines", type=int, default=200)
     a = ap.parse_args()
 
     state = load_state(a.state, a.files)
@@ -88,7 +83,7 @@ def main():
         if changed:
             time.sleep(1)  # 쓰는 중일 수 있으니 잠깐 더 기다린다
             for p in changed:
-                state[p] = report(p, state[p], a.max_lines)
+                state[p] = report(p, state[p])
             save_state(a.state, state)
             return 0
         if time.time() >= end:

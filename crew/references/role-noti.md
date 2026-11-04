@@ -4,7 +4,7 @@
 
 ## 시작
 
-- `EXECUTION.md`의 노티 감시 포인트 → `REQUIREMENTS.md` → `지시.md` → 작업의 `상태.md` → `working_raw_log.md` 최근 50줄 → `요청.md`, `응답.md`.
+- `EXECUTION.md`의 노티 감시 포인트 → `REQUIREMENTS.md` → `지시.md` → 작업의 `상태.md` → `working_raw_log.md` → `요청.md`, `응답.md`.
 - 재시작이면 `--state` 파일 덕분에 지난번 이후 바뀐 것만 받는다.
 
 ## 도는 방식
@@ -57,4 +57,3 @@
 - 근거 지시 없이 수정 요청하기
 - 작업 파일 직접 고치기
 - 사소한 것마다 알리기 (잦은 알림은 결국 다 무시된다)
-- `working_raw_log.md` 전체를 매번 다시 읽기
