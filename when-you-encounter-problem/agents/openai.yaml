@@ -1,0 +1,4 @@
+interface:
+  display_name: "When You Encounter Problem"
+  short_description: "모르는 문제의 최소 행동 가이드, 세부는 문답으로 채우기"
+  default_prompt: "Use $when-you-encounter-problem to clarify this problem with me through questions, then draft TODO.md, AGENTS.md, PLAN.md, ENVIRONMENT.md, and HANDOFF.md."
